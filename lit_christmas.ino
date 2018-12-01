@@ -23,7 +23,7 @@
 //**********MODE*************************************
 // Variables for the Sleep/power down modes:
 volatile boolean f_wdt = 1;
-int mode = 6;
+int mode = 8;
 
 // the setup routine runs once when you press reset:
 void setup()  {
@@ -54,7 +54,7 @@ void loop()  {
   else if (mode == 5) {setup_watchdog(2);knight_rider();}
   else if (mode == 6) {setup_watchdog(4);grey_counter();}
   else if (mode == 7) {setup_watchdog(5);rand_map();}
-  else if (mode == 8) {setup_watchdog(5);loop_roof();}
+  else if (mode == 8) {setup_watchdog(3);loop_roof();}
   mode++;
   if(mode == 9){mode = 0;}
 }
@@ -72,7 +72,13 @@ void loop_roof()
    write_a_i2c(32);
    write_a_i2c(16);
    write_no_sleep_a_i2c(0);
-   write_b_i2c(128);
+   write_b_i2c(1);
+   write_b_i2c(2);
+   write_b_i2c(4);
+   write_b_i2c(8);
+   write_b_i2c(16);
+   write_b_i2c(32);
+   write_b_i2c(64);
   }
 }
 

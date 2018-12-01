@@ -19,7 +19,7 @@
 //**********MODE*************************************
 // Variables for the Sleep/power down modes:
 volatile boolean f_wdt = 1;
-int mode = 8;
+int mode = 1;
 
 // the setup routine runs once when you press reset:
 void setup()  {
@@ -43,22 +43,24 @@ void setup()  {
 // the loop routine runs over and over again forever:
 void loop()  {
   if      (mode == 0) {setup_watchdog(9); all_on();      }
-  else if (mode == 1) {setup_watchdog(5); flip_flop();   }
-  else if (mode == 2) {setup_watchdog(4); tic_toc();     }
-  else if (mode == 3) {setup_watchdog(3); sweep();       }
-  else if (mode == 4) {setup_watchdog(2); binary_count();}
-  else if (mode == 5) {setup_watchdog(2); knight_rider();}
-  else if (mode == 6) {setup_watchdog(4); grey_counter();}
-  else if (mode == 7) {setup_watchdog(5); rand_map();    }
-  else if (mode == 8) {setup_watchdog(3); loop_roof();   }
-  else if (mode == 9) {setup_watchdog(3); flash_all();   }
+  else if (mode == 1) {setup_watchdog(4); flip_flop(0);  }
+  else if (mode == 2) {setup_watchdog(4); flip_flop(1);  }
+  else if (mode == 3) {setup_watchdog(4); tic_toc();     }
+  else if (mode == 4) {setup_watchdog(3); sweep();       }
+  else if (mode == 5) {setup_watchdog(2); binary_count();}
+  else if (mode == 6) {setup_watchdog(2); knight_rider();}
+  else if (mode == 7) {setup_watchdog(4); grey_counter();}
+  else if (mode == 8) {setup_watchdog(3); rand_flash();  }
+  else if (mode == 9) {setup_watchdog(3); rand_on();     }
+  else if (mode == 10){setup_watchdog(3); loop_roof();   }
+  else if (mode == 11){setup_watchdog(4); flash_all();   }
   mode++;
-  if(mode == 10){mode = 0;}
+  if(mode == 12){mode = 0;}
 }
 
 void loop_roof()
 {
-  for(int a = 0; a < 25; a++)
+  for(int a = 0; a < 10; a++)
   {
     write_b_i2c(128);
     write_no_sleep_b_i2c(0);
@@ -79,12 +81,23 @@ void loop_roof()
   }
 }
 
-void rand_map()
+void rand_flash()
 {
-  for(int a = 0; a < 255; a++)
+  for(int a = 0; a < 25; a++)
   {
-    int r = random(0,255);
-    write2i2c(r);
+    int r1 = random(0,255);
+    int r2 = random(0,255);
+    flash2i2c(r1,r2);
+  }
+}
+
+void rand_on()
+{
+  for(int a = 0; a < 25; a++)
+  {
+    int r1 = random(0,255);
+    int r2 = random(0,255);
+    write2bothi2c(r1,r2);
   }
 }
 
@@ -106,7 +119,7 @@ void grey_counter()
 
 void knight_rider()
 {
-  for (int a = 1; a < 50; a++)
+  for (int a = 1; a < 25; a++)
   {
     write_b_i2c(128);
     write_no_sleep_b_i2c(0);
@@ -140,19 +153,26 @@ void all_on()
 
 void binary_count()
 {
-  for (int a = 0; a < 256; a++)
+  for (int a = 0; a < 255; a++)
   {
      write2i2c(a);
-     write2i2c(0);
   }
 }
 
-void flip_flop()
+void flip_flop(int f)
 {
-    for (int a = 1; a < 255; a = (a << 1) | 1 ) {
+  if(f == 0){
+    for (int a = 1; a < 25; a++ ) {
+      write2bothi2c(101,85);   // 01100101 , 01010101
+      write2bothi2c(154,170);  // 10011010 , 10101010
+    }
+  }
+  else{
+    for (int a = 1; a < 25; a++ ) {
       flash2i2c(101,85);   // 01100101 , 01010101
       flash2i2c(154,170);  // 10011010 , 10101010
     }
+  }
 }
 
 void sweep()
@@ -205,6 +225,22 @@ void flash2i2c(int a, int b)
   TinyWireM.beginTransmission(0x20);
   TinyWireM.write(0x13); // GPIOB
   TinyWireM.write(0); // port B
+  TinyWireM.endTransmission();
+  if (f_wdt == 1) { // wait for timed out watchdog / flag is set when a watchdog timeout occurs
+    f_wdt = 0;     // reset flag
+    system_sleep();  // Send the unit to sleep
+  }
+}
+
+void write2bothi2c(int a, int b)
+{
+  TinyWireM.beginTransmission(0x20);
+  TinyWireM.write(0x12); // GPIOA
+  TinyWireM.write(a); // port A
+  TinyWireM.endTransmission();
+  TinyWireM.beginTransmission(0x20);
+  TinyWireM.write(0x13); // GPIOB
+  TinyWireM.write(b); // port B
   TinyWireM.endTransmission();
   if (f_wdt == 1) { // wait for timed out watchdog / flag is set when a watchdog timeout occurs
     f_wdt = 0;     // reset flag

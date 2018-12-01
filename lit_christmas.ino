@@ -1,15 +1,11 @@
-// pins 15~17 to GND, I2C bus address is 0x20
+// MCP23017 pins 15~17 to GND, I2C bus address is 0x20
 #include <TinyWireM.h>
-
-#define F_CPU 8000000  // This is used by delay.h library
-
 #include <stdlib.h>
 #include <avr/io.h>        // Adds useful constants
 #include <util/delay.h>    // Adds delay_ms and delay_us functions
-
 #include <avr/sleep.h>
 #include <avr/interrupt.h>
-
+#define F_CPU 8000000  // This is used by delay.h library
 // Routines to set and claer bits (used in the sleep code)
 #ifndef cbi
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
@@ -46,46 +42,46 @@ void setup()  {
 
 // the loop routine runs over and over again forever:
 void loop()  {
-  if      (mode == 0) {setup_watchdog(5);all_on();}
-  else if (mode == 1) {setup_watchdog(5);flip_flop();}
-  else if (mode == 2) {setup_watchdog(4);tic_toc();}
-  else if (mode == 3) {setup_watchdog(3);sweep();}
-  else if (mode == 4) {setup_watchdog(2);binary_count();}
-  else if (mode == 5) {setup_watchdog(2);knight_rider();}
-  else if (mode == 6) {setup_watchdog(4);grey_counter();}
-  else if (mode == 7) {setup_watchdog(5);rand_map();}
-  else if (mode == 8) {setup_watchdog(3);loop_roof();}
+  if      (mode == 0) {setup_watchdog(9); all_on();      }
+  else if (mode == 1) {setup_watchdog(5); flip_flop();   }
+  else if (mode == 2) {setup_watchdog(4); tic_toc();     }
+  else if (mode == 3) {setup_watchdog(3); sweep();       }
+  else if (mode == 4) {setup_watchdog(2); binary_count();}
+  else if (mode == 5) {setup_watchdog(2); knight_rider();}
+  else if (mode == 6) {setup_watchdog(4); grey_counter();}
+  else if (mode == 7) {setup_watchdog(5); rand_map();    }
+  else if (mode == 8) {setup_watchdog(3); loop_roof();   }
+  else if (mode == 9) {setup_watchdog(3); flash_all();   }
   mode++;
-  if(mode == 9){mode = 0;}
+  if(mode == 10){mode = 0;}
 }
 
 void loop_roof()
 {
-  for(int i = 0; i < 50; i++)
+  for(int a = 0; a < 25; a++)
   {
-   write_b_i2c(128);
-   write_no_sleep_b_i2c(0);
-   write_a_i2c(1);
-   write_a_i2c(2);
-   write_a_i2c(4);
-   write_a_i2c(8);
-   write_a_i2c(32);
-   write_a_i2c(16);
-   write_no_sleep_a_i2c(0);
-   write_b_i2c(1);
-   write_b_i2c(2);
-   write_b_i2c(4);
-   write_b_i2c(8);
-   write_b_i2c(16);
-   write_b_i2c(32);
-   write_b_i2c(64);
+    write_b_i2c(128);
+    write_no_sleep_b_i2c(0);
+    write_a_i2c(1);
+    write_a_i2c(2);
+    write_a_i2c(4);
+    write_a_i2c(8);
+    write_a_i2c(32);
+    write_a_i2c(16);
+    write_no_sleep_a_i2c(0);
+    write_b_i2c(1);
+    write_b_i2c(2);
+    write_b_i2c(4);
+    write_b_i2c(8);
+    write_b_i2c(16);
+    write_b_i2c(32);
+    write_b_i2c(64);
   }
 }
 
-
 void rand_map()
 {
-  for(int i = 0; i < 255; i++)
+  for(int a = 0; a < 255; a++)
   {
     int r = random(0,255);
     write2i2c(r);
@@ -95,45 +91,51 @@ void rand_map()
 void grey_counter()
 {
   int g = 0;
-  for(int i = 0; i < 255; i++)
+  int b = 0;
+  for(; b < 255; b++)
   {
-    g = bintogray(i);
+    g = bintogray(b);
     write2i2c(g);
   }
-  for(int i = 255; i > 0; i--)
+  for(b = 255; b > 0; b--)
   {
-    g = bintogray(i);
+    g = bintogray(b);
     write2i2c(g);
   }
 }
 
 void knight_rider()
 {
-  for (int s = 1; s < 255; s++)
+  for (int a = 1; a < 50; a++)
   {
-   write_b_i2c(128);
-   write_no_sleep_b_i2c(0);
-   write_a_i2c(1);
-   write_a_i2c(2);
-   write_a_i2c(4);
-   write_a_i2c(8);
-   write_a_i2c(32);
-   write_a_i2c(16);
-   write_a_i2c(32);
-   write_a_i2c(8);
-   write_a_i2c(4);
-   write_a_i2c(2);
-   write_a_i2c(1);
-   write_no_sleep_a_i2c(0);
+    write_b_i2c(128);
+    write_no_sleep_b_i2c(0);
+    write_a_i2c(1);
+    write_a_i2c(2);
+    write_a_i2c(4);
+    write_a_i2c(8);
+    write_a_i2c(32);
+    write_a_i2c(16);
+    write_a_i2c(32);
+    write_a_i2c(8);
+    write_a_i2c(4);
+    write_a_i2c(2);
+    write_a_i2c(1);
+    write_no_sleep_a_i2c(0);
+  }
+}
+
+void flash_all()
+{
+  for (int a = 0; a < 50; a++)
+  {
+    flash2i2c(255,255);
   }
 }
 
 void all_on()
 {
-  for (int a = 0; a < 50; a++)
-  {
-    write2i2c(255);
-  }
+  write2i2c(255);
 }
 
 void binary_count()
@@ -147,7 +149,7 @@ void binary_count()
 
 void flip_flop()
 {
-    for (int s = 1; s < 255; s = (s << 1) | 1 ) {
+    for (int a = 1; a < 255; a = (a << 1) | 1 ) {
       flash2i2c(101,85);   // 01100101 , 01010101
       flash2i2c(154,170);  // 10011010 , 10101010
     }
@@ -155,46 +157,46 @@ void flip_flop()
 
 void sweep()
 {
-  for (int s = 3; s < 256; s = s << 1)
+  for (int a = 3; a < 256; a = a << 1)
   {
-      write2i2c(s);
+      write2i2c(a);
       write2i2c(0);
   }
-  for (int r = 192; r > 1; r = r >> 1)
+  for (int b = 192; b > 1; b = b >> 1)
   {
-      write2i2c(r);
+      write2i2c(b);
       write2i2c(0);
   }
 }
 
 void tic_toc()
 {
-  for (int s = 1; s < 255; s = (s << 1) | 1)
+  for (int a = 1; a < 255; a = (a << 1) | 1)
   {
-      write2i2c(s);
+      write2i2c(a);
       write2i2c(0);
   }
-  for (int r = 255; r > 1; r = r >> 1)
+  for (int b = 255; b > 1; b = b >> 1)
   {
-      write2i2c(r);
+      write2i2c(b);
       write2i2c(0);
   }
 }
 
-int bintogray(int bin)
+int bintogray(int a)
 {
-    return bin ^ (bin >> 1);
+  return a ^ (a >> 1);
 }
 
-void flash2i2c(int r, int s)
+void flash2i2c(int a, int b)
 {
   TinyWireM.beginTransmission(0x20);
   TinyWireM.write(0x12); // GPIOA
-  TinyWireM.write(r); // port A
+  TinyWireM.write(a); // port A
   TinyWireM.endTransmission();
   TinyWireM.beginTransmission(0x20);
   TinyWireM.write(0x13); // GPIOB
-  TinyWireM.write(s); // port B
+  TinyWireM.write(b); // port B
   TinyWireM.endTransmission();
   TinyWireM.beginTransmission(0x20);
   TinyWireM.write(0x12); // GPIOA
@@ -210,15 +212,15 @@ void flash2i2c(int r, int s)
   }
 }
 
-void write2i2c(int r)
+void write2i2c(int a)
 {
   TinyWireM.beginTransmission(0x20);
   TinyWireM.write(0x12); // GPIOA
-  TinyWireM.write(r); // port A
+  TinyWireM.write(a); // port A
   TinyWireM.endTransmission();
   TinyWireM.beginTransmission(0x20);
   TinyWireM.write(0x13); // GPIOB
-  TinyWireM.write(r); // port B
+  TinyWireM.write(a); // port B
   TinyWireM.endTransmission();
   if (f_wdt == 1) { // wait for timed out watchdog / flag is set when a watchdog timeout occurs
     f_wdt = 0;     // reset flag
@@ -226,11 +228,11 @@ void write2i2c(int r)
   }
 }
 
-void write_a_i2c(int r)
+void write_a_i2c(int a)
 {
   TinyWireM.beginTransmission(0x20);
   TinyWireM.write(0x12); // GPIOA
-  TinyWireM.write(r); // port A
+  TinyWireM.write(a); // port A
   TinyWireM.endTransmission();
   if (f_wdt == 1) { // wait for timed out watchdog / flag is set when a watchdog timeout occurs
     f_wdt = 0;     // reset flag
@@ -238,19 +240,19 @@ void write_a_i2c(int r)
   }
 }
 
-void write_no_sleep_a_i2c(int r)
+void write_no_sleep_a_i2c(int a)
 {
   TinyWireM.beginTransmission(0x20);
   TinyWireM.write(0x12); // GPIOA
-  TinyWireM.write(r); // port A
+  TinyWireM.write(a); // port A
   TinyWireM.endTransmission();
 }
 
-void write_b_i2c(int r)
+void write_b_i2c(int b)
 {
   TinyWireM.beginTransmission(0x20);
-  TinyWireM.write(0x13); // GPIOA
-  TinyWireM.write(r); // port A
+  TinyWireM.write(0x13); // GPIOB
+  TinyWireM.write(b); // port B
   TinyWireM.endTransmission();
   if (f_wdt == 1) { // wait for timed out watchdog / flag is set when a watchdog timeout occurs
     f_wdt = 0;     // reset flag
@@ -258,11 +260,11 @@ void write_b_i2c(int r)
   }
 }
 
-void write_no_sleep_b_i2c(int r)
+void write_no_sleep_b_i2c(int b)
 {
   TinyWireM.beginTransmission(0x20);
-  TinyWireM.write(0x13); // GPIOA
-  TinyWireM.write(r); // port A
+  TinyWireM.write(0x13); // GPIOB
+  TinyWireM.write(b); // port B
   TinyWireM.endTransmission();
 }
 
@@ -276,22 +278,23 @@ void system_sleep() {
   sleep_disable();                     // System continues execution here when watchdog timed out
   sbi(ADCSRA, ADEN);                   // switch Analog to Digitalconverter ON
 }
+
 // 0=16ms, 1=32ms,2=64ms,3=128ms,4=250ms,5=500ms
 // 6=1 sec,7=2 sec, 8=4 sec, 9= 8sec
-void setup_watchdog(int ii) {
-  byte bb;
-  int ww;
-  if (ii > 9 ) ii = 9;
-  bb = ii & 7;
-  if (ii > 7) bb |= (1 << 5);
-  bb |= (1 << WDCE);
-  ww = bb;
+void setup_watchdog(int i) {
+  byte b;
+  int w;
+  if (i > 9 ) i = 9;
+  b = i & 7;
+  if (i > 7) b |= (1 << 5);
+  b |= (1 << WDCE);
+  w = b;
 
   MCUSR &= ~(1 << WDRF);
   // start timed sequence
   WDTCR |= (1 << WDCE) | (1 << WDE);
   // set new watchdog timeout value
-  WDTCR = bb;
+  WDTCR = b;
   WDTCR |= _BV(WDIE);
 }
 

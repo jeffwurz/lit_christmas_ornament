@@ -5,6 +5,8 @@
 #include <util/delay.h>    // Adds delay_ms and delay_us functions
 #include <avr/sleep.h>
 #include <avr/interrupt.h>
+#include <EEPROM.h>
+
 #define F_CPU 8000000  // This is used by delay.h library
 // Routines to set and claer bits (used in the sleep code)
 #ifndef cbi
@@ -20,6 +22,14 @@
 // Variables for the Sleep/power down modes:
 volatile boolean f_wdt = 1;
 int mode = 1;
+bool set = 1;
+
+struct settings_t
+{
+  int set;
+  int mode;
+
+} settings;
 
 // the setup routine runs once when you press reset:
 void setup()  {
@@ -34,14 +44,28 @@ void setup()  {
   TinyWireM.write(0x01); // IODIRB register
   TinyWireM.write(0x00); // set all of port B to outputs
   TinyWireM.endTransmission();
-  delay(100);  // Wait a while for this to stabilise.
+  delay(50);
   setup_watchdog(5);
   // 0=16ms, 1=32ms,2=64ms,3=128ms,4=250ms,5=500ms
   // 6=1 sec,7=2 sec, 8=4 sec, 9= 8sec
+  //
+  // read eeprom for previous mode.
+  eeprom_read_block((void*)&settings, (void*)0, sizeof(settings));
+  // change set to opposite
+  if(settings.set == 0){settings.set = 1; flash2i2c(128,0);}
+  else if (settings.set == 1){settings.set = 0; flash2i2c(64,0);}
+  else {settings.set = 1; flash2i2c(128,0);}
+  // read last mode from previous run.
+  eeprom_write_block((const void*)&settings, (void*)0, sizeof(settings));
+  // flash the state of set
+
 }
 
 // the loop routine runs over and over again forever:
-void loop()  {
+void loop()
+{
+  mode = settings.mode;
+  set = settings.set;
   if      (mode == 0) {setup_watchdog(9); all_on();      }
   else if (mode == 1) {setup_watchdog(4); flip_flop(0);  }
   else if (mode == 2) {setup_watchdog(4); flip_flop(1);  }
@@ -54,7 +78,12 @@ void loop()  {
   else if (mode == 9) {setup_watchdog(3); rand_on();     }
   else if (mode == 10){setup_watchdog(3); loop_roof();   }
   else if (mode == 11){setup_watchdog(4); flash_all();   }
-  mode++;
+  if(settings.set == 1)
+  {
+    mode++;
+    settings.mode = mode;
+    eeprom_write_block((const void*)&settings, (void*)0, sizeof(settings));
+  }
   if(mode == 12){mode = 0;}
 }
 

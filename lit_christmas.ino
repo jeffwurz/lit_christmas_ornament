@@ -81,10 +81,10 @@ void loop()
   if(settings.set == 1)
   {
     mode++;
+    if(mode == 12){mode = 0;}
     settings.mode = mode;
     eeprom_write_block((const void*)&settings, (void*)0, sizeof(settings));
   }
-  if(mode == 12){mode = 0;}
 }
 
 void loop_roof()
